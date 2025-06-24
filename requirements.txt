@@ -3,6 +3,5 @@ uvicorn
 pydantic
 joblib
 numpy
-CORSMiddleware
 pandas
 scikit-learn
