@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: 
+        https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com 
+        https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly 
+        https://stackpath.bootstrapcdn.com https://maps.googleapis.com 
+        https://cdn.tailwindcss.com https://ajax.googleapis.com 
+        https://kit.fontawesome.com https://cdn.datatables.net 
+        https://maxcdn.bootstrapcdn.com https://code.highcharts.com 
+        https://tako-static-assets-production.s3.amazonaws.com 
+        https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com 
+        https://*.icons8.com https://*.giphy.com https://picsum.photos 
+        https://images.unsplash.com;
+    frame-src 'self' https://www.youtube.com https://trytako.com;
+    child-src 'self';
+    manifest-src 'self';
+    worker-src 'self';
+    connect-src 'self' http://127.0.0.1:8000 ws://127.0.0.1:8000;  /* Allow WebSockets too */
+    upgrade-insecure-requests;
+    block-all-mixed-content;">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Style Survey</title>
+</head>
+<body>
+    <h2>Learning Style Survey</h2>
+    <div id="questionContainer"></div>
+    <button id="prevBtn" onclick="prevQuestion()" disabled>Previous</button>
+    <button id="nextBtn" onclick="nextQuestion()">Next</button>
+    <button id="submitBtn" onclick="submitSurvey()" style="display:none;">Submit</button>
+    <p id="result"></p>
+    
+    <script>
+const surveyQuestions = [
+    {
+        question: "When learning something new, I prefer to:",
+        options: [
+            { text: "Read detailed explanations and instructions", value: "1" },
+            { text: "Watch videos or demonstrations", value: "2" },
+            { text: "Listen to someone explain it", value: "3" },
+            { text: "Try it out hands-on immediately", value: "4" }
+        ]
+    },
+    {
+        question: "I remember information best when:",
+        options: [
+            { text: "I write it down or read it several times", value: "1" },
+            { text: "I see it visually represented (diagrams, charts)", value: "2" },
+            { text: "I hear it explained or discuss it", value: "3" },
+            { text: "I physically practice or apply it", value: "4" }
+        ]
+    },
+    {
+        question: "When solving problems, I tend to:",
+        options: [
+            { text: "Analyze all available information methodically", value: "1" },
+            { text: "Draw out the problem or visualize solutions", value: "2" },
+            { text: "Talk through potential approaches", value: "3" },
+            { text: "Try different solutions through trial and error", value: "4" }
+        ]
+    },
+    {
+        question: "I learn most effectively when:",
+        options: [
+            { text: "Working independently with clear instructions", value: "1" },
+            { text: "Information is presented with visual aids", value: "2" },
+            { text: "I can discuss concepts with others", value: "3" },
+            { text: "Engaging in practical, hands-on activities", value: "4" }
+        ]
+    },
+    {
+        question: "When remembering directions to a location, I usually:",
+        options: [
+            { text: "Write down detailed step-by-step instructions", value: "1" },
+            { text: "Prefer a map or visual landmarks", value: "2" },
+            { text: "Repeat the directions out loud or prefer verbal cues", value: "3" },
+            { text: "Remember by physically traveling the route once", value: "4" }
+        ]
+    },
+    {
+        question: "When learning a new skill, I prefer:",
+        options: [
+            { text: "Reading books or articles about the technique", value: "1" },
+            { text: "Watching tutorials or demonstrations", value: "2" },
+            { text: "Verbal instructions and feedback", value: "3" },
+            { text: "Jumping in and learning through practice", value: "4" }
+        ]
+    },
+    {
+        question: "In a classroom setting, I prefer when the teacher:",
+        options: [
+            { text: "Provides detailed notes and reading materials", value: "1" },
+            { text: "Uses visual aids like diagrams and videos", value: "2" },
+            { text: "Explains concepts verbally and encourages discussion", value: "3" },
+            { text: "Incorporates interactive activities and experiments", value: "4" }
+        ]
+    },
+    {
+        question: "I find it easiest to remember:",
+        options: [
+            { text: "Written information and text-based content", value: "1" },
+            { text: "Charts, diagrams, and images", value: "2" },
+            { text: "Things that were explained to me verbally", value: "3" },
+            { text: "Actions I've physically performed myself", value: "4" }
+        ]
+    },
+    {
+        question: "When explaining something to someone else, I typically:",
+        options: [
+            { text: "Write down clear step-by-step instructions", value: "1" },
+            { text: "Draw a diagram or show them visually", value: "2" },
+            { text: "Explain it verbally in detail", value: "3" },
+            { text: "Demonstrate how to do it and let them try", value: "4" }
+        ]
+    },
+    {
+        question: "When I get distracted while studying, it's usually because:",
+        options: [
+            { text: "The text is unclear or poorly organized", value: "1" },
+            { text: "There's a lack of visual elements or it looks boring", value: "2" },
+            { text: "The environment is too noisy", value: "3" },
+            { text: "I've been sitting still for too long", value: "4" }
+        ]
+    },
+    {
+        question: "I prefer books or articles that:",
+        options: [
+            { text: "Are text-heavy with detailed explanations", value: "1" },
+            { text: "Include many pictures, diagrams, and charts", value: "2" },
+            { text: "Are available as audiobooks", value: "3" },
+            { text: "Relate to real-life applications I can try", value: "4" }
+        ]
+    },
+    {
+        question: "When put into a leadership role, I tend to:",
+        options: [
+            { text: "Create detailed plans and written guidelines", value: "1" },
+            { text: "Create visual models or representations of goals", value: "2" },
+            { text: "Have frequent discussions and verbal check-ins", value: "3" },
+            { text: "Lead by example and demonstrate what needs to be done", value: "4" }
+        ]
+    },
+    {
+        question: "I find it easier to remember people when I recall their:",
+        options: [
+            { text: "Name and what was written about them", value: "1" },
+            { text: "Face and what they looked like", value: "2" },
+            { text: "Voice and what they said", value: "3" },
+            { text: "The handshake or interaction we had", value: "4" }
+        ]
+    },
+    {
+        question: "When making important decisions, I typically:",
+        options: [
+            { text: "Make lists of pros and cons", value: "1" },
+            { text: "Visualize different outcomes", value: "2" },
+            { text: "Talk through options with someone else", value: "3" },
+            { text: "Go with what feels right based on past experience", value: "4" }
+        ]
+    },
+    {
+        question: "I prefer to study in an environment that is:",
+        options: [
+            { text: "Quiet with minimal distractions", value: "1" },
+            { text: "Visually organized and aesthetically pleasing", value: "2" },
+            { text: "Quiet but allows for occasional discussion", value: "3" },
+            { text: "Allows movement and hands-on activities", value: "4" }
+        ]
+    }
+];
+
+
+        let currentQuestionIndex = 0;
+        let responses = new Array(surveyQuestions.length).fill(null);
+        const container = document.getElementById("questionContainer");
+
+        function renderQuestion() {
+            const questionData = surveyQuestions[currentQuestionIndex];
+            container.innerHTML = `<p>${questionData.question}</p>` +
+                questionData.options.map(opt => 
+                    `<label><input type="radio" name="q${currentQuestionIndex}" value="${opt.value}" 
+                    ${responses[currentQuestionIndex] === opt.value ? "checked" : ""}> ${opt.text}</label><br>`
+                ).join("");
+
+            document.getElementById("prevBtn").disabled = currentQuestionIndex === 0;
+            document.getElementById("nextBtn").style.display = currentQuestionIndex === surveyQuestions.length - 1 ? "none" : "inline-block";
+            document.getElementById("submitBtn").style.display = currentQuestionIndex === surveyQuestions.length - 1 ? "inline-block" : "none";
+        }
+
+        function nextQuestion() {
+            saveResponse();
+            if (currentQuestionIndex < surveyQuestions.length - 1) {
+                currentQuestionIndex++;
+                renderQuestion();
+            }
+        }
+
+        function prevQuestion() {
+            saveResponse();
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                renderQuestion();
+            }
+        }
+
+        function saveResponse() {
+            const selected = document.querySelector(`input[name="q${currentQuestionIndex}"]:checked`);
+            if (selected) {
+                responses[currentQuestionIndex] = selected.value;
+            }
+        }
+
+        async function submitSurvey() {
+            saveResponse();
+            const response = await fetch("http://127.0.0.1:8000/predict", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ responses })
+            });
+            const result = await response.json();
+            document.getElementById("result").innerText = "Predicted Learner Type: " + result.prediction;
+        }
+
+        renderQuestion();
+    </script>
+</body>
+</html>
